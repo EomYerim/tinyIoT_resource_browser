@@ -1,9 +1,14 @@
 <template>
     <div>
-        <h1>Welcome to Home!</h1>
+        <ServerData></ServerData>
     </div>
 </template>
 
 <script>
-export default {};
+import ServerData from "@/views/ServerData.vue";
+
+export default {
+    name: "Home",
+    components : {ServerData}
+};
 </script>
