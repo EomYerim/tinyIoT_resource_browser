@@ -1,12 +1,13 @@
 import Vue from 'vue'
 import App from './App.vue'
-import router from './router'
+import Tree from './tree'
 import { BootstrapVue, IconsPlugin } from 'bootstrap-vue'
 import axios from 'axios'
 
 // Import Bootstrap and BootstrapVue CSS files (order is important)
 import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
+
 
 Vue.config.productionTip = false
 
@@ -17,7 +18,9 @@ Vue.use(IconsPlugin)
 
 Vue.prototype.$http = axios
 
+Vue.use(Tree)
+
+
 new Vue({
-  router,
-  render: h => h(App),
+  render: h => h(App)
 }).$mount('#app')
