@@ -1,4 +1,4 @@
-# browser
+# TinyIoT Resource Browser
 
 ## Project setup
 ```
