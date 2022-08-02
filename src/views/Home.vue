@@ -5,10 +5,10 @@
             <b-container fluid>
                 <b-row>
                     <b-col sm="5">
-                        <b-form-input :id="`url1`" :type="url" placeholder="Target Resource"></b-form-input>
+                        <b-form-input v-model="url1" :type="url" placeholder="Target Resource"></b-form-input>
                     </b-col>
                     <b-col sm="5">
-                        <b-form-input :id="`url2`" :type="url" placeholder="Target Resource"></b-form-input>
+                        <b-form-input v-model="url2" :type="url" placeholder="Target Resource"></b-form-input>
                     </b-col>
                     <b-col sm="1">
                         <b-button @click="getResource">Submit</b-button>
@@ -31,22 +31,12 @@
         </div>
         <hr>
     </div>
-    <!-- <div>
-        <ul>
-            <li v-for="({group, subitems}) in treeGroups" :key="group.ri">
-                <span>{{group.rn}}</span>
-                <ol>
-                    <li v-for="subitem in subitems">-- {{subitem.rn}}</li>
-                </ol>
-            </li>
-        </ul>
-    </div> -->
     <div id="tree">
-        <ul is="tree" :data="treeList">
-            <li slot-scope="{item, index, depth}">
-                <button @click="$set(item,'showChildren',!item.showChildren)">+/-</button> &nbsp;
+        <ul id="treeList" is="tree" :data="treeList">
+            <li id="treeList" slot-scope="{item, index, depth}">
+                <button id="treeBtn" @click="$set(item,'showChildren',!item.showChildren)">+/-</button> &nbsp;
                 <span id="resource">{{item.rn}}</span>
-                <ul is="childTree" :data="item.children" v-show="item.showChildren" />
+                <ul id="treeList" is="childTree" :data="item.children" v-show="item.showChildren" />
             </li>
         </ul>
     </div>
@@ -60,13 +50,20 @@ import axios from 'axios'
     name: "Home",
     data() {
       return {
-        treeList: []   // resource를 빈 리스트로 초기화
+        url1: '',
+        url2: '',
+        treeList: []   // treeList 빈 리스트로 초기화
       }
     },
     methods: {
         async getResource() {
+            var url1 = this.url1;
+            var url2 = this.url2;
+            var url = url1 + '/viewer' + url2;
+            //var url = 'https://4aded162-929f-41b2-904c-fe542272d2d7.mock.pstmn.io/TinyIoT'
+
             this.treeList = await this.api(
-                'https://1978eb44-90ad-40f8-9978-1ecad4ab1516.mock.pstmn.io/resources',
+                url,
                 'get',
                 {}
             );
@@ -95,15 +92,15 @@ import axios from 'axios'
             
             for (i = 0; i < list.length; i += 1) {
                 node = list[i];
-                if (node.pi !== null) {
-                // if you have dangling branches check that map[node.parentId] exists
-                list[map[node.pi]].children.push(node);
+                if (node.pi !== "NULL") {
+                    // if you have dangling branches check that map[node.parentId] exists
+                    list[map[node.pi]].children.push(node);
                 } else {
-                roots.push(node);
+                    roots.push(node);
                 }
             }
             return roots;
-        }
+        },
     },
   }
 </script>
@@ -116,4 +113,11 @@ import axios from 'axios'
         margin-top: 15px;
         margin-left: 15px;
     }
+    #treeList {
+        list-style: none;
+        margin-top: 5px;
+    }
+    /* #treeBtn{
+        background-color: transparent;
+    } */
 </style>
