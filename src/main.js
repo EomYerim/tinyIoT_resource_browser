@@ -3,6 +3,7 @@ import App from './App.vue'
 import Tree from './tree'
 import { BootstrapVue, IconsPlugin } from 'bootstrap-vue'
 import axios from 'axios'
+import './plugins/swal'
 
 // Import Bootstrap and BootstrapVue CSS files (order is important)
 import 'bootstrap/dist/css/bootstrap.css'
@@ -19,6 +20,7 @@ Vue.use(IconsPlugin)
 Vue.prototype.$http = axios
 
 Vue.use(Tree)
+
 
 
 new Vue({

@@ -1,17 +1,18 @@
 <template>
 <div>
     <div>
-        <div id="uri">
+        <div id="url">
             <b-container fluid>
                 <b-row>
-                    <b-col sm="5">
+                    <b-col cols="5">
                         <b-form-input v-model="url1" :type="url" placeholder="Target Resource"></b-form-input>
                     </b-col>
-                    <b-col sm="5">
+                    <b-col cols="5">
                         <b-form-input v-model="url2" :type="url" placeholder="Target Resource"></b-form-input>
                     </b-col>
-                    <b-col sm="1">
-                        <b-button @click="getResource">Submit</b-button>
+                    <b-col id="alignBtn">
+                        <b-button class="btn" @click="getResource">Submit</b-button>
+                        <b-button class="btn" @click="allClear">Reset</b-button>
                     </b-col>
                 </b-row>
             </b-container>
@@ -31,12 +32,12 @@
         </div>
         <hr>
     </div>
-    <div id="tree">
-        <ul id="treeList" is="tree" :data="treeList">
-            <li id="treeList" slot-scope="{item, index, depth}">
+    <div>
+        <ul is="tree" :data="treeList"> <!-- <ul>이 tree 컴포넌트가 된다 -->
+            <li slot-scope="{item, index, depth}">  <!-- scoped slot 정의 -->
                 <button id="treeBtn" @click="$set(item,'showChildren',!item.showChildren)">+/-</button> &nbsp;
-                <span id="resource">{{item.rn}}</span>
-                <ul id="treeList" is="childTree" :data="item.children" v-show="item.showChildren" />
+                <span rel="tooltip" v-b-tooltip.hover.html.right="'ty: ' + item.ty + '<br/>' + 'ri: ' + item.ri+ '<br/>' + 'rn: ' + item.rn">{{item.rn}}</span>    <!-- scoped slot으로 전달되는 컨텍스트 데이터를 통해 노드 외형 정의 -->
+                <ul is="childTree" :data="item.children" v-show="item.showChildren" /> <!-- 하위 Tree가 렌더링 될 위치, children 컴포넌트가 된다 -->
             </li>
         </ul>
     </div>
@@ -52,15 +53,19 @@ import axios from 'axios'
       return {
         url1: '',
         url2: '',
-        treeList: []   // treeList 빈 리스트로 초기화
+        num: 0,
+        treeList: [],   // treeList 빈 리스트로 초기화
       }
     },
     methods: {
         async getResource() {
             var url1 = this.url1;
             var url2 = this.url2;
-            var url = url1 + '/viewer' + url2;
+            //var url = url1 + '/viewer' + url2;
             //var url = 'https://4aded162-929f-41b2-904c-fe542272d2d7.mock.pstmn.io/TinyIoT'
+            //OM2M
+            var url = 'http://34.64.70.229:8080/in-name/ISPTech_bus_shelter'
+            //var url = url + url2;
 
             this.treeList = await this.api(
                 url,
@@ -76,8 +81,18 @@ import axios from 'axios'
                     method: method,
                     url: url,
                     data: data,
+                    headers: {
+                        "X-M2M-Origin": "admin:admin"
+                    }
                 }).catch((e) => {
                     console.log(e);
+                    if (e.response) {
+                        this.$swal.fire({
+                            title: '대상 서버에 접속할 수 없습니다',
+                            text: 'Unable to access destination server',
+                            icon: 'error'
+                        })
+                    }
                 })
             ).data;
         },
@@ -101,23 +116,45 @@ import axios from 'axios'
             }
             return roots;
         },
+
+        async allClear() {
+            this.url1 = '';
+            this.url2 = '';
+            this.treeList = [];
+        }
     },
   }
 </script>
 
 <style>
-    #uri {
-        margin-top: 15px;
+    #url {
+        margin-top: 20px;
     }
     #radio {
         margin-top: 15px;
         margin-left: 15px;
     }
-    #treeList {
+
+    #alignBtn {
+        text-align: center;
+    }
+    .btn {
+        margin-right: 10px;
+        display: inline-block;
+    }
+
+    ul {
         list-style: none;
+    }
+    li {
         margin-top: 5px;
     }
-    /* #treeBtn{
-        background-color: transparent;
-    } */
+    ul span:hover {
+        font-weight: bold;
+    }
+    .tooltip-inner {
+        text-align: left!important;
+        margin: 10px;
+    }
+
 </style>
