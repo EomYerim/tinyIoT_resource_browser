@@ -1,6 +1,5 @@
 <template>
-<div>
-    <div>
+    <div class="wrapper">
         <div id="url">
             <b-container fluid>
                 <b-row>
@@ -22,57 +21,107 @@
                 label="Number of Instance"
                 v-slot="{ ariaDescribedby }">
                 <b-form-radio-group plain
-                    v-model="show"
-                    :aria-describedby="ariaDescribedby">
-                    <b-form-radio value="1"> 1 Latest</b-form-radio>
-                    <b-form-radio value="3"> 3 Latest</b-form-radio>
-                    <b-form-radio value="5"> 5 Latest</b-form-radio>
-                </b-form-radio-group>
+                    v-model="latest"
+                    :options="options"
+                    :aria-descibedby="ariaDescribedy"
+                    name="numOfCIN"
+                ></b-form-radio-group>
             </b-form-group>
         </div>
         <hr>
+        <section>
+            <ul id="tree" is="tree" :data="treeList"> <!-- <ul>이 tree 컴포넌트가 된다 -->
+                <li slot-scope="{item, index, depth}">  <!-- scoped slot 정의 -->
+                    <button id="treeBtn" @click="$set(item,'showChildren',!item.showChildren)">+/-</button> &nbsp;
+                    <span v-on:click="getAttribute(item.ty, item.rn)">    <!-- scoped slot으로 전달되는 컨텍스트 데이터를 통해 노드 외형 정의 -->
+                        <span v-if="item.ty === 5">
+                            <b-badge variant="warning">CSE</b-badge>
+                        </span>
+                        <span v-if="item.ty === 2">
+                            <b-badge variant="info">AE</b-badge>
+                        </span>
+                        <span v-if="item.ty === 3">
+                            <b-badge variant="danger">CNT</b-badge>
+                        </span>
+                        <span v-if="item.ty === 4">
+                            <b-badge variant="success">CIN</b-badge>
+                        </span>
+                        {{item.rn}}
+                    </span>
+                    <ul is="childTree" :data="item.children" v-show="item.showChildren" /> <!-- 하위 Tree가 렌더링 될 위치, children 컴포넌트가 된다 -->
+                </li>
+            </ul>
+        </section>
+        <aside>
+            <div id="info">Resource Information</div>
+            <div id="name">
+                <span v-if="type === 5">
+                    <b-badge variant="warning">CSE</b-badge>
+                </span>
+                <span v-if="type === 2">
+                    <b-badge variant="info">AE</b-badge>
+                </span>
+                <span v-if="type === 3">
+                    <b-badge variant="danger">CNT</b-badge>
+                </span>
+                <span v-if="type === 4">
+                    <b-badge variant="success">CIN</b-badge>
+                </span>
+                <span id="name">
+                    {{resourceName}}  
+                </span>
+                <!-- <span>
+                    {{path}}
+                </span>     -->
+                <!-- {{resourceName}} -->
+            </div>
+            <div id="box">
+                <ul v-for="item in object">
+                    <li v-for="(value, name) in item">{{name}}: {{value}}</li>
+                </ul>
+            </div>
+        </aside>
     </div>
-    <div>
-        <ul is="tree" :data="treeList"> <!-- <ul>이 tree 컴포넌트가 된다 -->
-            <li slot-scope="{item, index, depth}">  <!-- scoped slot 정의 -->
-                <button id="treeBtn" @click="$set(item,'showChildren',!item.showChildren)">+/-</button> &nbsp;
-                <span rel="tooltip" v-b-tooltip.hover.html.right="'ty: ' + item.ty + '<br/>' + 'ri: ' + item.ri+ '<br/>' + 'rn: ' + item.rn">{{item.rn}}</span>    <!-- scoped slot으로 전달되는 컨텍스트 데이터를 통해 노드 외형 정의 -->
-                <ul is="childTree" :data="item.children" v-show="item.showChildren" /> <!-- 하위 Tree가 렌더링 될 위치, children 컴포넌트가 된다 -->
-            </li>
-        </ul>
-    </div>
-</div>
 </template>
 
 <script>
 import axios from 'axios'
 
-  export default {
-    name: "Home",
+export default {
     data() {
-      return {
-        url1: '',
-        url2: '',
-        num: 0,
-        treeList: [],   // treeList 빈 리스트로 초기화
-      }
+        return {
+            url1: '',
+            url2: '',
+            latest: '5',
+            options: [
+                { text: '1 Latest', value: '1' },
+                { text: '3 Latest', value: '3' },
+                { text: '5 Latest', value: '5' }
+            ],
+            list: [],       // 서버로부터 받은 데이터 List
+            treeList: [],   // tree 구조 List
+            object: {},
+            type: 0,
+            resourceName: '',
+            path: '',
+        }
     },
     methods: {
         async getResource() {
             var url1 = this.url1;
             var url2 = this.url2;
-            //var url = url1 + '/viewer' + url2;
+            var url = url1 + '/viewer' + url2 + '?la=' + this.latest;
             //var url = 'https://4aded162-929f-41b2-904c-fe542272d2d7.mock.pstmn.io/TinyIoT'
             //OM2M
-            var url = 'http://34.64.70.229:8080/in-name/ISPTech_bus_shelter'
-            //var url = url + url2;
+            //var url = 'http://34.64.70.229:8080/in-name/ISPTech_bus_shelter'
+            //var url = url1 + url2;
 
-            this.treeList = await this.api(
+            this.list = await this.api(
                 url,
                 'get',
                 {}
             );
-            this.treeList = await this.list_to_tree(this.treeList)
+            this.treeList = await this.list_to_tree(this.list)
             console.log(this.treeList);
         },
         async api(url, method, data) {
@@ -81,9 +130,10 @@ import axios from 'axios'
                     method: method,
                     url: url,
                     data: data,
-                    headers: {
-                        "X-M2M-Origin": "admin:admin"
-                    }
+                    // headers: {
+                    //     "X-M2M-Origin": "admin:admin"
+                    // }
+
                 }).catch((e) => {
                     console.log(e);
                     if (e.response) {
@@ -120,41 +170,128 @@ import axios from 'axios'
         async allClear() {
             this.url1 = '';
             this.url2 = '';
+            this.latest = '5';
             this.treeList = [];
+            this.object = {};
+        },
+
+        async getAttribute (type, resourceName) {
+            var url1 = this.url1;
+            this.path = await this.findPath(this.list, resourceName);
+            var url = url1 + this.path;
+
+            // axios.get('https://911d7654-821e-4958-b6f2-6f45f66399e2.mock.pstmn.io/TinyIoT'
+            // ).then(response => {
+            //     console.log(response);
+            //     this.type = type;
+            //     this.resourceName = resourceName;
+            //     this.object = response.data;
+            // }).catch((error) => {
+            //     console.log(error);
+            // })
+
+            axios.get(url
+            ).then(response => {
+                console.log(response);
+                this.type = type;
+                this.resourceName = resourceName;
+                this.object = response.data;
+            }).catch((error) => {
+                console.log(error);
+            })
+        },
+
+        async findPath(list, resourceName) {
+            var result = list.find(item => item.rn === resourceName);
+            var pi = result.pi;
+            var path = '/' + result.rn;
+
+            while(pi !== "NULL") {
+                result = list.find(item => item.ri === pi);
+                pi = result.pi;
+                path = '/' + result.rn + path;
+                console.log(path);
+            }
+
+            return path;
         }
     },
-  }
+}
 </script>
 
 <style>
-    #url {
-        margin-top: 20px;
-    }
-    #radio {
-        margin-top: 15px;
-        margin-left: 15px;
-    }
+.wrapper {
+    margin: 0;
+    width: 100%;
+    height: 100vh;
+}
+#url {
+    padding-top: 20px;
+    padding-left: 10px;
+}
+#radio {
+    padding-top: 10px;
+    padding-left: 25px;
+}
+.btn {
+    margin-right: 10px;
+}
 
-    #alignBtn {
-        text-align: center;
-    }
-    .btn {
-        margin-right: 10px;
-        display: inline-block;
-    }
+section {
+    position: relative;
+    overflow: hidden;
+    width: 70%;
+    height: 100%;
+    float: left;
+    /* background-color: olive; */
+}
+hr {
+    margin-top: 0!important;
+    margin-bottom: 5px!important;
+}
+aside {
+    position: relative;
+    overflow: hidden;
+    width: 30%;
+    height: 100%;
+    float: left;
+    padding: 10px;
+    border-left: 0.5px solid lightgray;
+    /* background-color: violet; */
+}
 
-    ul {
-        list-style: none;
-    }
-    li {
-        margin-top: 5px;
-    }
-    ul span:hover {
-        font-weight: bold;
-    }
-    .tooltip-inner {
-        text-align: left!important;
-        margin: 10px;
-    }
+ul {
+    list-style: none;
+}
+li {
+    margin-top: 5px;
+}
+ul span:hover {
+    font-weight: bold;
+}
+
+#info {
+    /* padding-top: 20px; */
+    padding-left: 10px;
+    color: gray;
+}
+#name {
+    margin-left: 5px;
+    padding: 5px;
+    font-weight: bold; 
+}
+#box {
+    position: absolute;
+    margin-top: 5px;
+    padding: 5px;
+    width: auto;
+    height: 50%;
+    right: 15px;
+    left: 15px;
+    top: 70px;
+    /* bottom: 1000px; */
+    border: 1px solid gray;
+    border-radius: 5px;
+}
 
 </style>
