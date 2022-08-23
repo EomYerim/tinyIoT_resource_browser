@@ -22,6 +22,7 @@
                 v-slot="{ ariaDescribedby }">
                 <b-form-radio-group plain
                     v-model="latest"
+                    @change="getResource"
                     :options="options"
                     :aria-descibedby="ariaDescribedy"
                     name="numOfCIN"
@@ -76,8 +77,14 @@
                 <!-- {{resourceName}} -->
             </div>
             <div id="box">
+                <!-- <table v-for="item in object"> 
+                    <tr v-for="(value, name) in item">
+                        <td>{{name}}:</td>
+                        <td>{{value}}</td>
+                    </tr>
+                </table> -->
                 <ul v-for="item in object">
-                    <li v-for="(value, name) in item">{{name}}: {{value}}</li>
+                    <li v-for="(value, name) in item"><span id="attribute">{{name}}:</span> {{value}}</li>
                 </ul>
             </div>
         </aside>
@@ -92,11 +99,12 @@ export default {
         return {
             url1: '',
             url2: '',
-            latest: '5',
+            latest: '10',
             options: [
                 { text: '1 Latest', value: '1' },
                 { text: '3 Latest', value: '3' },
-                { text: '5 Latest', value: '5' }
+                { text: '5 Latest', value: '5' },
+                { text: 'ALL (up to 10)', value: '10'}
             ],
             list: [],       // 서버로부터 받은 데이터 List
             treeList: [],   // tree 구조 List
@@ -112,8 +120,6 @@ export default {
             var url2 = this.url2;
             var url = url1 + '/viewer' + url2 + '?la=' + this.latest;
             //var url = 'https://4aded162-929f-41b2-904c-fe542272d2d7.mock.pstmn.io/TinyIoT'
-            //OM2M
-            //var url = 'http://34.64.70.229:8080/in-name/ISPTech_bus_shelter'
             //var url = url1 + url2;
 
             this.list = await this.api(
@@ -121,6 +127,7 @@ export default {
                 'get',
                 {}
             );
+            console.log(this.list);
             this.treeList = await this.list_to_tree(this.list)
             console.log(this.treeList);
         },
@@ -180,6 +187,7 @@ export default {
             this.path = await this.findPath(this.list, resourceName);
             var url = url1 + this.path;
 
+            // Mock Server
             // axios.get('https://911d7654-821e-4958-b6f2-6f45f66399e2.mock.pstmn.io/TinyIoT'
             // ).then(response => {
             //     console.log(response);
@@ -214,7 +222,7 @@ export default {
             }
 
             return path;
-        }
+        },
     },
 }
 </script>
@@ -293,5 +301,7 @@ ul span:hover {
     border: 1px solid gray;
     border-radius: 5px;
 }
-
+#attribute {
+    color: blue;
+}
 </style>
