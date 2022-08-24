@@ -76,17 +76,39 @@
                 </span>     -->
                 <!-- {{resourceName}} -->
             </div>
-            <div id="box">
-                <!-- <table v-for="item in object"> 
+            <table v-for="item in object">
+                <thead>
+                    <tr bgcolor="#E5EEFA" align="center" style="color:blue">
+                        <th>Attribute</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody>
                     <tr v-for="(value, name) in item">
-                        <td>{{name}}:</td>
+                        <td>{{name}}</td>
                         <td>{{value}}</td>
                     </tr>
+                </tbody> 
+            </table>
+            <!-- <div id="box">
+                <table v-for="item in object">
+                    <thead>
+                        <tr bgcolor="lightsteelblue" align="center" style="color:blue">
+                            <th>Attribute</th>
+                            <th>Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(value, name) in item">
+                            <td>{{name}}:</td>
+                            <td>{{value}}</td>
+                        </tr>
+                    </tbody> 
                 </table> -->
-                <ul v-for="item in object">
+                <!-- <ul v-for="item in object">
                     <li v-for="(value, name) in item"><span id="attribute">{{name}}:</span> {{value}}</li>
-                </ul>
-            </div>
+                </ul> -->
+            <!-- </div> -->
         </aside>
     </div>
 </template>
@@ -119,6 +141,7 @@ export default {
             var url1 = this.url1;
             var url2 = this.url2;
             var url = url1 + '/viewer' + url2 + '?la=' + this.latest;
+            //Mock Server
             //var url = 'https://4aded162-929f-41b2-904c-fe542272d2d7.mock.pstmn.io/TinyIoT'
             //var url = url1 + url2;
 
@@ -288,7 +311,7 @@ ul span:hover {
     padding: 5px;
     font-weight: bold; 
 }
-#box {
+/* #box {
     position: absolute;
     margin-top: 5px;
     padding: 5px;
@@ -297,11 +320,29 @@ ul span:hover {
     right: 15px;
     left: 15px;
     top: 70px;
-    /* bottom: 1000px; */
     border: 1px solid gray;
     border-radius: 5px;
+} */
+/* table {
+    width: 100%;
+    border-collapse: separate !important;
+    border: 1px solid lightgray;
+    border-radius: 8px;
 }
-#attribute {
+th, td {
+    border: 1px solid lightgray;
+} */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid lightgray;
+    border-radius: 5px !important;
+}
+th, td {
+    border: 1px solid lightgray;
+    padding: 7px;
+}
+/* #attribute {
     color: blue;
-}
+} */
 </style>
