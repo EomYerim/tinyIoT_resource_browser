@@ -47,7 +47,11 @@
                         <span v-if="item.ty === 4">
                             <b-badge variant="success">CIN</b-badge>
                         </span>
-                        {{item.rn}}
+                        <span
+                            @contextmenu.prevent.stop="handleClick($event, item)"    
+                        >
+                            {{item.rn}}
+                        </span>
                     </span>
                     <ul is="childTree" :data="item.children" v-show="item.showChildren" /> <!-- 하위 Tree가 렌더링 될 위치, children 컴포넌트가 된다 -->
                 </li>
@@ -110,6 +114,13 @@
                 </ul> -->
             <!-- </div> -->
         </aside>
+        <vue-simple-context-menu
+            :elementId="'contextMenu'"
+            :options="optionsArray"
+            :ref="'vueSimpleContextMenu'"
+            @option-clicked="optionClicked"
+        >
+        </vue-simple-context-menu>
     </div>
 </template>
 
@@ -134,6 +145,20 @@ export default {
             type: 0,
             resourceName: '',
             path: '',
+
+            optionsArray: [
+                {
+                    name: 'Create',
+                    slug: 'create'
+                },
+                {
+                    type: 'divider'
+                },
+                {
+                    name: 'Delete',
+                    slug: 'delete'
+                }
+            ]
         }
     },
     methods: {
@@ -142,7 +167,7 @@ export default {
             var url2 = this.url2;
             var url = url1 + '/viewer' + url2 + '?la=' + this.latest;
             //Mock Server
-            //var url = 'https://4aded162-929f-41b2-904c-fe542272d2d7.mock.pstmn.io/TinyIoT'
+            var url = 'https://4aded162-929f-41b2-904c-fe542272d2d7.mock.pstmn.io/TinyIoT'
             //var url = url1 + url2;
 
             this.list = await this.api(
@@ -211,17 +236,7 @@ export default {
             var url = url1 + this.path;
 
             // Mock Server
-            // axios.get('https://911d7654-821e-4958-b6f2-6f45f66399e2.mock.pstmn.io/TinyIoT'
-            // ).then(response => {
-            //     console.log(response);
-            //     this.type = type;
-            //     this.resourceName = resourceName;
-            //     this.object = response.data;
-            // }).catch((error) => {
-            //     console.log(error);
-            // })
-
-            axios.get(url
+            axios.get('https://911d7654-821e-4958-b6f2-6f45f66399e2.mock.pstmn.io/TinyIoT'
             ).then(response => {
                 console.log(response);
                 this.type = type;
@@ -230,6 +245,17 @@ export default {
             }).catch((error) => {
                 console.log(error);
             })
+            
+
+            // axios.get(url
+            // ).then(response => {
+            //     console.log(response);
+            //     this.type = type;
+            //     this.resourceName = resourceName;
+            //     this.object = response.data;
+            // }).catch((error) => {
+            //     console.log(error);
+            // })
         },
 
         async findPath(list, resourceName) {
@@ -246,6 +272,14 @@ export default {
 
             return path;
         },
+
+        async handleClick (event, item) {
+            this.$refs.vueSimpleContextMenu.showMenu(event, item)
+        },
+
+        async optionClicked (event) {
+            window.alert(JSON.stringify(event))
+        }
     },
 }
 </script>

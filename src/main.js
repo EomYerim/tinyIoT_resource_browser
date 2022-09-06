@@ -9,6 +9,8 @@ import './plugins/swal'
 import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
 
+import VueSimpleContextMenu from './components/contextMenu/index.js'
+Vue.component('vue-simple-context-menu', VueSimpleContextMenu)
 
 Vue.config.productionTip = false
 
