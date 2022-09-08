@@ -34,7 +34,7 @@
             <ul id="tree" is="tree" :data="treeList"> <!-- <ul>이 tree 컴포넌트가 된다 -->
                 <li slot-scope="{item, index, depth}">  <!-- scoped slot 정의 -->
                     <button id="treeBtn" @click="$set(item,'showChildren',!item.showChildren)">+/-</button> &nbsp;
-                    <span v-on:click="getAttribute(item.ty, item.rn)">    <!-- scoped slot으로 전달되는 컨텍스트 데이터를 통해 노드 외형 정의 -->
+                    <span>    <!-- scoped slot으로 전달되는 컨텍스트 데이터를 통해 노드 외형 정의 -->
                         <span v-if="item.ty === 5">
                             <b-badge variant="warning">CSE</b-badge>
                         </span>
@@ -47,6 +47,9 @@
                         <span v-if="item.ty === 4">
                             <b-badge variant="success">CIN</b-badge>
                         </span>
+                        <span v-if="item.ty == 23">
+                            <b-badge variant="secondary">SUB</b-badge>
+                        </span>
                         <span
                             @contextmenu.prevent.stop="handleClick($event, item)"    
                         >
@@ -58,61 +61,47 @@
             </ul>
         </section>
         <aside>
-            <div id="info">Resource Information</div>
-            <div id="name">
-                <span v-if="type === 5">
-                    <b-badge variant="warning">CSE</b-badge>
-                </span>
-                <span v-if="type === 2">
-                    <b-badge variant="info">AE</b-badge>
-                </span>
-                <span v-if="type === 3">
-                    <b-badge variant="danger">CNT</b-badge>
-                </span>
-                <span v-if="type === 4">
-                    <b-badge variant="success">CIN</b-badge>
-                </span>
-                <span id="name">
-                    {{resourceName}}  
-                </span>
-                <!-- <span>
-                    {{path}}
-                </span>     -->
-                <!-- {{resourceName}} -->
-            </div>
-            <table v-for="item in object">
-                <thead>
-                    <tr bgcolor="#E5EEFA" align="center" style="color:blue">
-                        <th>Attribute</th>
-                        <th>Value</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="(value, name) in item">
-                        <td>{{name}}</td>
-                        <td>{{value}}</td>
-                    </tr>
-                </tbody> 
-            </table>
-            <!-- <div id="box">
+            <div class="properties" v-if="selectedContextMenu === 'p'">
+                <div id="info">Resource Information</div>
+                <div id="name">
+                    <span v-if="type === 5">
+                        <b-badge variant="warning">CSE</b-badge>
+                    </span>
+                    <span v-if="type === 2">
+                        <b-badge variant="info">AE</b-badge>
+                    </span>
+                    <span v-if="type === 3">
+                        <b-badge variant="danger">CNT</b-badge>
+                    </span>
+                    <span v-if="type === 4">
+                        <b-badge variant="success">CIN</b-badge>
+                    </span>
+                    <span v-if="type == 23">
+                        <b-badge variant="secondary">SUB</b-badge>
+                    </span>
+                    <span id="name">
+                        {{resourceName}}  
+                    </span>
+                    <!-- <span>
+                        {{path}}
+                    </span>     -->
+                    <!-- {{resourceName}} -->
+                </div>
                 <table v-for="item in object">
                     <thead>
-                        <tr bgcolor="lightsteelblue" align="center" style="color:blue">
+                        <tr bgcolor="#E5EEFA" align="center" style="color:blue">
                             <th>Attribute</th>
                             <th>Value</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr v-for="(value, name) in item">
-                            <td>{{name}}:</td>
+                            <td>{{name}}</td>
                             <td>{{value}}</td>
                         </tr>
                     </tbody> 
-                </table> -->
-                <!-- <ul v-for="item in object">
-                    <li v-for="(value, name) in item"><span id="attribute">{{name}}:</span> {{value}}</li>
-                </ul> -->
-            <!-- </div> -->
+                </table>
+            </div>
         </aside>
         <vue-simple-context-menu
             :elementId="'contextMenu'"
@@ -157,8 +146,18 @@ export default {
                 {
                     name: 'Delete',
                     slug: 'delete'
+                },                
+                {
+                    type: 'divider'
+                },
+                {
+                    name: 'Properties',
+                    slug: 'properties'
                 }
-            ]
+
+            ],
+            
+            selectedContextMenu: null,
         }
     },
     methods: {
@@ -274,12 +273,27 @@ export default {
         },
 
         async handleClick (event, item) {
-            this.$refs.vueSimpleContextMenu.showMenu(event, item)
+            this.$refs.vueSimpleContextMenu.showMenu(event, item);
         },
 
         async optionClicked (event) {
-            window.alert(JSON.stringify(event))
-        }
+            var modal = document.getElementById('modal');
+            // ContentMenu - Create 클릭
+            if (event.option.name === 'Create') {
+                this.selectedContextMenu = 'c';
+
+            }
+            // ContentMenu - Delete 클릭
+            else if (event.option.name === 'Delete') {
+                this.selectedContextMenu = 'd';
+            }
+            // ContextMenu - Properties 클릭
+            else if(event.option.name === 'Properties') {
+                this.selectedContextMenu = 'p';
+                this.getAttribute(this.type, this.resourceName);
+            }
+        },
+
     },
 }
 </script>
