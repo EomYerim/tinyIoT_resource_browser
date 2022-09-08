@@ -61,6 +61,9 @@
             </ul>
         </section>
         <aside>
+            <div class="delete" v-if="selectedContextMenu === 'd'">
+                <div id="info">Delete the selected resource</div>
+            </div>
             <div class="properties" v-if="selectedContextMenu === 'p'">
                 <div id="info">Resource Information</div>
                 <div id="name">
@@ -259,6 +262,7 @@ export default {
 
         async findPath(list, resourceName) {
             var result = list.find(item => item.rn === resourceName);
+            console.log(result)
             var pi = result.pi;
             var path = '/' + result.rn;
 
@@ -290,6 +294,8 @@ export default {
             // ContextMenu - Properties 클릭
             else if(event.option.name === 'Properties') {
                 this.selectedContextMenu = 'p';
+                this.type = event.item.ty;
+                this.resourceName = event.item.rn;
                 this.getAttribute(this.type, this.resourceName);
             }
         },
