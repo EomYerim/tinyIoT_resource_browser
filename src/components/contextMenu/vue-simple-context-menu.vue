@@ -14,6 +14,7 @@
             option.class,
             option.type === 'divider' ? 'vue-simple-context-menu__divider' : ''
           ]"
+          v-bind:style="option.disabled == true ? 'pointer-events:none; color:lightgray' : ''"
         >
           <span v-html="option.name"></span>
         </li>
@@ -48,6 +49,32 @@
     methods: {
       showMenu(event, item) {
         this.item = item;
+        
+        if (item.ty === 5) {
+          console.log('CSE');
+          this.options[0].disabled = true;
+          this.options[2].disabled = true;
+        }
+        else if (item.ty === 2) {
+          console.log('AE');
+          this.options[0].disabled = false;
+          this.options[2].disabled = true;
+        }
+        else if (item.ty === 3) {
+          console.log('CNT');
+          this.options[0].disabled = false;
+          this.options[2].disabled = false;
+        }
+        else if (item.ty === 4) {
+          console.log('CIN');
+          this.options[0].disabled = true;
+          this.options[2].disabled = true;
+        }
+        else if (item.ty === 23) {
+          console.log('SUB');
+          this.options[0].disabled = true;
+          this.options[2].disabled = false;
+        }
   
         var menu = document.getElementById(this.elementId);
         if (!menu) {
