@@ -34,7 +34,7 @@
             <ul id="tree" is="tree" :data="treeList"> <!-- <ul>이 tree 컴포넌트가 된다 -->
                 <li slot-scope="{item, index, depth}">  <!-- scoped slot 정의 -->
                     <button id="treeBtn" @click="$set(item,'showChildren',!item.showChildren)">+/-</button> &nbsp;
-                    <span>    <!-- scoped slot으로 전달되는 컨텍스트 데이터를 통해 노드 외형 정의 -->
+                    <span>    <!-- scoped slot으로 전달되는 컨텍스트 데이터를 통\][해 노드 외형 정의 -->
                         <span v-if="item.ty === 5">
                             <b-badge variant="warning">CSE</b-badge>
                         </span>
@@ -61,8 +61,136 @@
             </ul>
         </section>
         <aside>
+            <div class="create" v-if="selectedContextMenu === 'c'">
+                <div id="info">Create a child resource</div>
+                <div id="content">
+                    <p>1. Select resource type</p>
+                        <label>
+                            <input type="radio" value="cnt" v-model="selectedResource">&nbsp;
+                            <b-badge variant="danger">CNT</b-badge>
+                        </label>
+                        &nbsp;&nbsp;
+                        <label>
+                            <input type="radio" value="cin" v-model="selectedResource" :disabled="disabled == 1">&nbsp;
+                            <b-badge variant="success">CIN</b-badge>
+                        </label>
+                        &nbsp;&nbsp;
+                        <label>
+                            <input type="radio" value="sub" v-model="selectedResource" :disabled="disabled == 1">&nbsp;
+                            <b-badge variant="secondary">SUB</b-badge>
+                        </label>
+                    <hr/>
+                    <p>2. Fill out resource information</p>
+                    <div v-if="selectedResource === 'cnt'">
+                        <b-container fluid>
+                            <b-row>
+                                <b-col sm="3">
+                                    <label style="color:gray">Resource Name (rn)</label>
+                                </b-col>
+                                <b-col sm="9">
+                                    <b-form-input v-model="rn" id="rn" :type="text"></b-form-input>
+                                </b-col>
+                            </b-row>
+                        </b-container>
+                    </div>
+                    <div v-if="selectedResource === 'cin'">
+                        <b-container fluid>
+                            <b-row>
+                                <b-col sm="3">
+                                    <label style="color:gray">Resource Name (rn)</label>
+                                </b-col>
+                                <b-col sm="9">
+                                    <b-form-input  v-model="rn" id="rn" :type="text"></b-form-input>
+                                </b-col>
+                            </b-row>
+                            <b-row>
+                                <b-col sm="3">
+                                    <label style="color:gray">Content (con)</label>
+                                </b-col>
+                                <b-col sm="9">
+                                    <b-form-input v-model="con" id="con" :type="text"></b-form-input>
+                                </b-col>
+                            </b-row>
+                        </b-container>
+                    </div>
+                    <div v-if="selectedResource === 'sub'">
+                        <b-container fluid>
+                            <b-row>
+                                <b-col sm="3">
+                                    <label style="color:gray">Resource Name (rn)</label>
+                                </b-col>
+                                <b-col sm="9">
+                                    <b-form-input v-model="rn" id="rn" :type="text"></b-form-input>
+                                </b-col>
+                            </b-row>
+                            <b-row>
+                                <b-col sm="3">
+                                    <label style="color:gray">Event Noti. Uri (nu)</label>
+                                </b-col>
+                                <b-col sm="9">
+                                    <b-form-input  v-model="nu" id="nu" :type="text"></b-form-input>
+                                </b-col>
+                            </b-row>
+                            <b-row>
+                                <b-col sm="3">
+                                    <label style="color:gray">Event Noti. Criteria (enc)</label>
+                                </b-col>
+                                <b-col sm="9">
+                                    <b-form-group
+                                        v-slot="{ ariaDescribedby }"
+                                    >
+                                        <b-form-checkbox-group
+                                            v-model="net"
+                                            :options="subOptions"
+                                            :aria-dscribedby="ariaDescribedby"
+                                            name="net"
+                                            stacked
+                                        >
+                                        </b-form-checkbox-group>
+                                    </b-form-group>
+                                </b-col>
+                            </b-row>
+                        </b-container>
+                    </div>
+                </div>
+                <div id="btn">
+                    <b-button variant="light" @click="close">Cancel</b-button>
+                    <b-button variant="primary" @click="createResource">Create</b-button>
+                </div>
+            </div>
             <div class="delete" v-if="selectedContextMenu === 'd'">
                 <div id="info">Delete the selected resource</div>
+                <div id="content">
+                    <p>When you click "Delete" button, the selected resource will be removed from server include it's descendant resources and this process is not recoverable. Confirm what you want to do!</p>
+                    <p>
+                        Are you sure you want to delete 
+                        <span style="padding-left: 5px">
+                            <span v-if="type === 5">
+                                <b-badge variant="warning">CSE</b-badge>
+                            </span>
+                            <span v-if="type === 2">
+                                <b-badge variant="info">AE</b-badge>
+                            </span>
+                            <span v-if="type === 3">
+                                <b-badge variant="danger">CNT</b-badge>
+                            </span>
+                            <span v-if="type === 4">
+                                <b-badge variant="success">CIN</b-badge>
+                            </span>
+                            <span v-if="type == 23">
+                                <b-badge variant="secondary">SUB</b-badge>
+                            </span>
+                            <span style="font-weight: bold">
+                                {{resourceName}}  
+                            </span>
+                        </span>
+                        ?
+                    </p>
+                </div>
+                <div id="btn">
+                    <b-button variant="light" @click="close">Cancel</b-button>
+                    <b-button variant="primary" @click="deleteResource">Delete</b-button>
+                </div>
             </div>
             <div class="properties" v-if="selectedContextMenu === 'p'">
                 <div id="info">Resource Information</div>
@@ -104,6 +232,9 @@
                         </tr>
                     </tbody> 
                 </table>
+                <div id="btn">
+                    <b-button variant="light" @click="close">Close</b-button>
+                </div>
             </div>
         </aside>
         <vue-simple-context-menu
@@ -141,36 +272,52 @@ export default {
             optionsArray: [
                 {
                     name: 'Create',
-                    slug: 'create'
+                    slug: 'create',
+                    disabled: false
                 },
                 {
                     type: 'divider'
                 },
                 {
                     name: 'Delete',
-                    slug: 'delete'
+                    slug: 'delete',
+                    disabled: false
                 },                
                 {
                     type: 'divider'
                 },
                 {
                     name: 'Properties',
-                    slug: 'properties'
+                    slug: 'properties',
+                    disabled: false
                 }
 
             ],
             
             selectedContextMenu: null,
+
+            selectedResource: null,
+            disabled: 0,
+            
+            rn: null,
+            con: null,
+            nu: null,
+            net: [],
+            subOptions: [
+                { text: 'Update of Resource(1)', value: 1 },
+                { text: 'Delete of Resource(2)', value: 2 },
+                { text: 'Create of Direct Child Resource(3)', value: 3 },
+                { text: 'Delete of Direct Child Resource(4)', value: 4 },
+            ],
         }
     },
     methods: {
         async getResource() {
             var url1 = this.url1;
             var url2 = this.url2;
-            var url = url1 + '/viewer' + url2 + '?la=' + this.latest;
+            //var url = url1 + '/viewer' + url2 + '?la=' + this.latest;
             //Mock Server
             var url = 'https://4aded162-929f-41b2-904c-fe542272d2d7.mock.pstmn.io/TinyIoT'
-            //var url = url1 + url2;
 
             this.list = await this.api(
                 url,
@@ -190,7 +337,7 @@ export default {
                     // headers: {
                     //     "X-M2M-Origin": "admin:admin"
                     // }
-
+                
                 }).catch((e) => {
                     console.log(e);
                     if (e.response) {
@@ -227,9 +374,12 @@ export default {
         async allClear() {
             this.url1 = '';
             this.url2 = '';
-            this.latest = '5';
+            this.latest = '10';
             this.treeList = [];
             this.object = {};
+            this.selectedContextMenu = null;
+            this.selectedResource = null;
+            this.disabled = 0;
         },
 
         async getAttribute (type, resourceName) {
@@ -248,7 +398,7 @@ export default {
                 console.log(error);
             })
             
-
+            // TinyIoT
             // axios.get(url
             // ).then(response => {
             //     console.log(response);
@@ -281,15 +431,23 @@ export default {
         },
 
         async optionClicked (event) {
-            var modal = document.getElementById('modal');
             // ContentMenu - Create 클릭
             if (event.option.name === 'Create') {
                 this.selectedContextMenu = 'c';
-
+                this.type = event.item.ty;
+                if (this.type === 2) {
+                    this.disabled = 1;
+                }
+                this.resourceName = event.item.rn;
+                console.log(this.disabled);
+                this.getAttribute(this.type, this.resourceName);
             }
             // ContentMenu - Delete 클릭
             else if (event.option.name === 'Delete') {
                 this.selectedContextMenu = 'd';
+                this.type = event.item.ty;
+                this.resourceName = event.item.rn;
+                this.getAttribute(this.type, this.resourceName);
             }
             // ContextMenu - Properties 클릭
             else if(event.option.name === 'Properties') {
@@ -298,6 +456,31 @@ export default {
                 this.resourceName = event.item.rn;
                 this.getAttribute(this.type, this.resourceName);
             }
+        },
+
+        async close() {
+            this.selectedContextMenu = null;
+        },
+
+        async createResource() {
+            var url1 = this.url1;
+            console.log(this.path);
+            var url = url1 + this.path + '/' + this.rn;
+            console.log(this.url);
+        },
+
+        async deleteResource() {
+            var url1 = this.url1;
+            var url = url1 + this.path;
+
+            axios.delete(url)
+            .then( res => {
+                console.log(res.data);
+                alert("삭제가 완료되었습니다.");
+            })
+            .catch((error) => {
+                console.error(error);
+            });
         },
 
     },
@@ -325,7 +508,7 @@ export default {
 section {
     position: relative;
     overflow: hidden;
-    width: 70%;
+    width: 65%;
     height: 100%;
     float: left;
     /* background-color: olive; */
@@ -337,7 +520,7 @@ hr {
 aside {
     position: relative;
     overflow: hidden;
-    width: 30%;
+    width: 35%;
     height: 100%;
     float: left;
     padding: 10px;
@@ -356,36 +539,26 @@ ul span:hover {
 }
 
 #info {
-    /* padding-top: 20px; */
-    padding-left: 10px;
-    color: gray;
+    padding: 10px;
+    color: white;
+    background-color: #17a2b7;
 }
 #name {
     margin-left: 5px;
     padding: 5px;
+    margin-bottom: 5px;
     font-weight: bold; 
 }
-/* #box {
-    position: absolute;
-    margin-top: 5px;
+#content {
+    margin-left: 5px;
     padding: 5px;
-    width: auto;
-    height: 50%;
-    right: 15px;
-    left: 15px;
-    top: 70px;
-    border: 1px solid gray;
-    border-radius: 5px;
-} */
-/* table {
-    width: 100%;
-    border-collapse: separate !important;
-    border: 1px solid lightgray;
-    border-radius: 8px;
+    margin-bottom: 5px;
 }
-th, td {
-    border: 1px solid lightgray;
-} */
+#btn {
+    padding-top: 10px;
+    float: right;
+}
+
 table {
     width: 100%;
     border-collapse: collapse;
@@ -396,7 +569,5 @@ th, td {
     border: 1px solid lightgray;
     padding: 7px;
 }
-/* #attribute {
-    color: blue;
-} */
+
 </style>
