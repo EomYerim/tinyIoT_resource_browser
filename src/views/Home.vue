@@ -213,10 +213,6 @@
                     <span id="name">
                         {{resourceName}}  
                     </span>
-                    <!-- <span>
-                        {{path}}
-                    </span>     -->
-                    <!-- {{resourceName}} -->
                 </div>
                 <table v-for="item in object">
                     <thead>
@@ -309,13 +305,12 @@ export default {
         }
     },
     methods: {
+        // Click submit button
         async getResource() {
             var url1 = this.url1;
             var url2 = this.url2;
             var url = url1 + '/viewer' + url2 + '?la=' + this.latest;
-            //Mock Server
-            //var url = 'https://4aded162-929f-41b2-904c-fe542272d2d7.mock.pstmn.io/TinyIoT'
-
+        
             this.list = await this.api(
                 url,
                 'get',
@@ -331,9 +326,6 @@ export default {
                     method: method,
                     url: url,
                     data: data,
-                    // headers: {
-                    //     "X-M2M-Origin": "admin:admin"
-                    // }
 
                 }).catch((e) => {
                     console.log(e);
@@ -348,6 +340,7 @@ export default {
             ).data;
         },
 
+        // Convert list to tree structure
         async list_to_tree(list) {
             var map = {}, node, roots = [], i;
             
@@ -368,6 +361,8 @@ export default {
             return roots;
         },
 
+
+        // Click reset button
         async allClear() {
             this.url1 = '';
             this.url2 = '';
@@ -379,21 +374,11 @@ export default {
             this.disabled = 0;
         },
 
+        // contextMenu - Click properties
         async getAttribute (type, resourceName) {
             var url1 = this.url1;
             this.path = await this.findPath(this.list, resourceName);
             var url = url1 + this.path;
-
-            // Mock Server
-            // axios.get('https://911d7654-821e-4958-b6f2-6f45f66399e2.mock.pstmn.io/TinyIoT'
-            // ).then(response => {
-            //     console.log(response);
-            //     this.type = type;
-            //     this.resourceName = resourceName;
-            //     this.object = response.data;
-            // }).catch((error) => {
-            //     console.log(error);
-            // })
             
             // TinyIoT
             axios.get(url
@@ -427,6 +412,7 @@ export default {
             this.$refs.vueSimpleContextMenu.showMenu(event, item);
         },
 
+        // contextMenu - Handle events based on options
         async optionClicked (event) {
             var modal = document.getElementById('modal');
             // ContentMenu - Create 클릭
@@ -456,20 +442,22 @@ export default {
             }
         },
 
+        // Close the contextMenu options
         async close() {
             this.selectedContextMenu = null;
         },
 
+        // contextMenu - Click create (ongoing)
         async createResource() {
             var url1 = this.url1;
             console.log(this.path);
             var url = url1 + this.path;
         },
 
+        // contextMenu - Click delete (ongoing)
         async deleteResource() {
             var url1 = this.url1;
             console.log(this.path);
-            // this.path = await this.findPath(this.list, resourceName);
             var url = url1 + this.path;
 
             axios.delete(url
