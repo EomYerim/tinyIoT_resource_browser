@@ -272,24 +272,21 @@ export default {
             optionsArray: [
                 {
                     name: 'Create',
-                    slug: 'create',
-                    disabled: false
+                    slug: 'create'
                 },
                 {
                     type: 'divider'
                 },
                 {
                     name: 'Delete',
-                    slug: 'delete',
-                    disabled: false
+                    slug: 'delete'
                 },                
                 {
                     type: 'divider'
                 },
                 {
                     name: 'Properties',
-                    slug: 'properties',
-                    disabled: false
+                    slug: 'properties'
                 }
 
             ],
@@ -315,9 +312,9 @@ export default {
         async getResource() {
             var url1 = this.url1;
             var url2 = this.url2;
-            //var url = url1 + '/viewer' + url2 + '?la=' + this.latest;
+            var url = url1 + '/viewer' + url2 + '?la=' + this.latest;
             //Mock Server
-            var url = 'https://4aded162-929f-41b2-904c-fe542272d2d7.mock.pstmn.io/TinyIoT'
+            //var url = 'https://4aded162-929f-41b2-904c-fe542272d2d7.mock.pstmn.io/TinyIoT'
 
             this.list = await this.api(
                 url,
@@ -337,7 +334,7 @@ export default {
                     // headers: {
                     //     "X-M2M-Origin": "admin:admin"
                     // }
-                
+
                 }).catch((e) => {
                     console.log(e);
                     if (e.response) {
@@ -388,18 +385,7 @@ export default {
             var url = url1 + this.path;
 
             // Mock Server
-            axios.get('https://911d7654-821e-4958-b6f2-6f45f66399e2.mock.pstmn.io/TinyIoT'
-            ).then(response => {
-                console.log(response);
-                this.type = type;
-                this.resourceName = resourceName;
-                this.object = response.data;
-            }).catch((error) => {
-                console.log(error);
-            })
-            
-            // TinyIoT
-            // axios.get(url
+            // axios.get('https://911d7654-821e-4958-b6f2-6f45f66399e2.mock.pstmn.io/TinyIoT'
             // ).then(response => {
             //     console.log(response);
             //     this.type = type;
@@ -408,6 +394,17 @@ export default {
             // }).catch((error) => {
             //     console.log(error);
             // })
+            
+            // TinyIoT
+            axios.get(url
+            ).then(response => {
+                console.log(response);
+                this.type = type;
+                this.resourceName = resourceName;
+                this.object = response.data;
+            }).catch((error) => {
+                console.log(error);
+            })
         },
 
         async findPath(list, resourceName) {
@@ -431,6 +428,7 @@ export default {
         },
 
         async optionClicked (event) {
+            var modal = document.getElementById('modal');
             // ContentMenu - Create 클릭
             if (event.option.name === 'Create') {
                 this.selectedContextMenu = 'c';
@@ -465,21 +463,19 @@ export default {
         async createResource() {
             var url1 = this.url1;
             console.log(this.path);
-            var url = url1 + this.path + '/' + this.rn;
-            console.log(this.url);
+            var url = url1 + this.path;
         },
 
         async deleteResource() {
             var url1 = this.url1;
+            console.log(this.path);
+            // this.path = await this.findPath(this.list, resourceName);
             var url = url1 + this.path;
 
-            axios.delete(url)
-            .then( res => {
-                console.log(res.data);
+            axios.delete(url
+            ).then( res => {
                 alert("삭제가 완료되었습니다.");
-            })
-            .catch((error) => {
-                console.error(error);
+                console.log(res.data);
             });
         },
 
