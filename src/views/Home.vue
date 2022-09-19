@@ -66,22 +66,22 @@
                 <div id="content">
                     <p>1. Select resource type</p>
                         <label>
-                            <input type="radio" value="cnt" v-model="selectedResource">&nbsp;
+                            <input type="radio" value="cnt" v-model="selectedResource" @click="changeCreateRadio">&nbsp;
                             <b-badge variant="danger">CNT</b-badge>
                         </label>
                         &nbsp;&nbsp;
                         <label>
-                            <input type="radio" value="cin" v-model="selectedResource" :disabled="disabled == 1">&nbsp;
+                            <input type="radio" value="cin" v-model="selectedResource" :disabled="disabled == 1" @click="changeCreateRadio">&nbsp;
                             <b-badge variant="success">CIN</b-badge>
                         </label>
                         &nbsp;&nbsp;
                         <label>
-                            <input type="radio" value="sub" v-model="selectedResource" :disabled="disabled == 1">&nbsp;
+                            <input type="radio" value="sub" v-model="selectedResource" :disabled="disabled == 1" @click="changeCreateRadio">&nbsp;
                             <b-badge variant="secondary">SUB</b-badge>
                         </label>
                     <hr/>
                     <p>2. Fill out resource information</p>
-                    <div v-if="selectedResource === 'cnt'">
+                    <div v-if="selectedResource === 'cnt'" >
                         <b-container fluid>
                             <b-row>
                                 <b-col sm="3">
@@ -310,6 +310,8 @@ export default {
             var url1 = this.url1;
             var url2 = this.url2;
             var url = url1 + '/viewer' + url2 + '?la=' + this.latest;
+            //Mock Server
+            //var url = 'https://4aded162-929f-41b2-904c-fe542272d2d7.mock.pstmn.io/TinyIoT'
         
             this.list = await this.api(
                 url,
@@ -379,17 +381,28 @@ export default {
             var url1 = this.url1;
             this.path = await this.findPath(this.list, resourceName);
             var url = url1 + this.path;
+
+            // Mock Server
+            // axios.get('https://911d7654-821e-4958-b6f2-6f45f66399e2.mock.pstmn.io/TinyIoT'
+            // ).then(response => {
+            //     console.log(response);
+            //     this.type = type;
+            //     this.resourceName = resourceName;
+            //     this.object = response.data;
+            // }).catch((error) => {
+            //     console.log(error);
+            // })
             
             // TinyIoT
-            axios.get(url
-            ).then(response => {
-                console.log(response);
-                this.type = type;
-                this.resourceName = resourceName;
-                this.object = response.data;
-            }).catch((error) => {
-                console.log(error);
-            })
+            // axios.get(url
+            // ).then(response => {
+            //     console.log(response);
+            //     this.type = type;
+            //     this.resourceName = resourceName;
+            //     this.object = response.data;
+            // }).catch((error) => {
+            //     console.log(error);
+            // })
         },
 
         async findPath(list, resourceName) {
@@ -447,11 +460,63 @@ export default {
             this.selectedContextMenu = null;
         },
 
+        // Change contextMenu - Create radio button
+        async changeCreateRadio() {
+            this.rn = null;
+        },
+
         // contextMenu - Click create (ongoing)
         async createResource() {
-            var url1 = this.url1;
-            console.log(this.path);
-            var url = url1 + this.path;
+            var url = this.url1 + this.path;
+            console.log(url);
+
+            if(this.selectedResource == 'cnt') {
+                console.log('selectedResource: ' + this.selectedResource);
+                var data = {
+                    "m2m:cnt" : {
+                        "rn" : this.rn
+                    }
+                }
+
+                const jsonData = JSON.stringify(data)
+                console.log(jsonData);
+
+                axios.post(url, {jsonData})
+                .then((response) => {
+                    console.log(response);
+                })
+            }
+            else if(this.selectedResource == 'cin') {
+                console.log('selectedResource: ' + this.selectedResource);
+                console.log('con: ' + this.con);
+
+                var data = {
+                    "m2m:cin" : {
+                        "con" : this.con
+                    }
+                }
+
+                const jsonData = JSON.stringify(data)
+                console.log(jsonData);
+            }
+            else if(this.selectedResource == 'sub') {
+                console.log('selectedResource: ' + this.selectedResource);
+                console.log('nu: ' + this.nu);
+                console.log('net: ' + this.net);
+
+                var data = {
+                    "m2m:sub" :  {
+                        "rn" : this.rn,
+                        "enc" : {
+                            "net": this.net
+                        },
+                        "nu" : this.nu // nu -> list 처리 필요!!!
+                    }
+                }
+
+                const jsonData = JSON.stringify(data)
+                console.log(jsonData);
+            } 
         },
 
         // contextMenu - Click delete (ongoing)
