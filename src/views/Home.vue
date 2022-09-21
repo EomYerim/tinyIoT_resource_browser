@@ -97,14 +97,6 @@
                         <b-container fluid>
                             <b-row>
                                 <b-col sm="3">
-                                    <label style="color:gray">Resource Name (rn)</label>
-                                </b-col>
-                                <b-col sm="9">
-                                    <b-form-input  v-model="rn" id="rn" :type="text"></b-form-input>
-                                </b-col>
-                            </b-row>
-                            <b-row>
-                                <b-col sm="3">
                                     <label style="color:gray">Content (con)</label>
                                 </b-col>
                                 <b-col sm="9">
@@ -268,21 +260,21 @@ export default {
             optionsArray: [
                 {
                     name: 'Create',
-                    slug: 'create'
+                    disabled: false
                 },
                 {
                     type: 'divider'
                 },
                 {
                     name: 'Delete',
-                    slug: 'delete'
+                    disabled: false
                 },                
                 {
                     type: 'divider'
                 },
                 {
                     name: 'Properties',
-                    slug: 'properties'
+                    disabled: false
                 }
 
             ],
@@ -309,9 +301,9 @@ export default {
         async getResource() {
             var url1 = this.url1;
             var url2 = this.url2;
-            var url = url1 + '/viewer' + url2 + '?la=' + this.latest;
+            //var url = url1 + '/viewer' + url2 + '?la=' + this.latest;
             //Mock Server
-            //var url = 'https://4aded162-929f-41b2-904c-fe542272d2d7.mock.pstmn.io/TinyIoT'
+            var url = 'https://4aded162-929f-41b2-904c-fe542272d2d7.mock.pstmn.io/TinyIoT'
         
             this.list = await this.api(
                 url,
@@ -383,15 +375,15 @@ export default {
             var url = url1 + this.path;
 
             // Mock Server
-            // axios.get('https://911d7654-821e-4958-b6f2-6f45f66399e2.mock.pstmn.io/TinyIoT'
-            // ).then(response => {
-            //     console.log(response);
-            //     this.type = type;
-            //     this.resourceName = resourceName;
-            //     this.object = response.data;
-            // }).catch((error) => {
-            //     console.log(error);
-            // })
+            axios.get('https://911d7654-821e-4958-b6f2-6f45f66399e2.mock.pstmn.io/TinyIoT'
+            ).then(response => {
+                console.log(response);
+                this.type = type;
+                this.resourceName = resourceName;
+                this.object = response.data;
+            }).catch((error) => {
+                console.log(error);
+            })
             
             // TinyIoT
             // axios.get(url
@@ -427,7 +419,6 @@ export default {
 
         // contextMenu - Handle events based on options
         async optionClicked (event) {
-            var modal = document.getElementById('modal');
             // ContentMenu - Create 클릭
             if (event.option.name === 'Create') {
                 this.selectedContextMenu = 'c';
@@ -481,10 +472,12 @@ export default {
                 const jsonData = JSON.stringify(data)
                 console.log(jsonData);
 
-                axios.post(url, {jsonData})
+                axios.post(url, {jsonData}, { headers : {'Content-Type' : 'application/json; ty=3'} })
                 .then((response) => {
                     console.log(response);
                 })
+
+                this.getResource();
             }
             else if(this.selectedResource == 'cin') {
                 console.log('selectedResource: ' + this.selectedResource);
@@ -498,6 +491,13 @@ export default {
 
                 const jsonData = JSON.stringify(data)
                 console.log(jsonData);
+
+                axios.post(url, jsonData, { headers : {'Content-Type' : 'application/json; ty=4'} })
+                .then((response) => {
+                    console.log(response);
+                })
+
+                this.getResource();
             }
             else if(this.selectedResource == 'sub') {
                 console.log('selectedResource: ' + this.selectedResource);
@@ -530,6 +530,8 @@ export default {
                 alert("삭제가 완료되었습니다.");
                 console.log(res.data);
             });
+
+            this.getResource();
         },
 
     },
