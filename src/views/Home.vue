@@ -34,7 +34,9 @@
             <ul id="tree" is="tree" :data="treeList"> <!-- <ul>이 tree 컴포넌트가 된다 -->
                 <li slot-scope="{item, index, depth}">  <!-- scoped slot 정의 -->
                     <button id="treeBtn" @click="$set(item,'showChildren',!item.showChildren)">+/-</button> &nbsp;
-                    <span>    <!-- scoped slot으로 전달되는 컨텍스트 데이터를 통\][해 노드 외형 정의 -->
+                    <span
+                        :class="{blink: new_rn === item.rn}"
+                    >    <!-- scoped slot으로 전달되는 컨텍스트 데이터를 통해 노드 외형 정의 -->
                         <span v-if="item.ty === 5">
                             <b-badge variant="warning">CSE</b-badge>
                         </span>
@@ -120,7 +122,7 @@
                                     <label style="color:gray">Event Noti. Uri (nu)</label>
                                 </b-col>
                                 <b-col sm="9">
-                                    <b-form-input  v-model="nu" id="nu" :type="text"></b-form-input>
+                                    <b-form-input  v-model="nu_str" id="nu" :type="text"></b-form-input>
                                 </b-col>
                             </b-row>
                             <b-row>
@@ -286,7 +288,8 @@ export default {
             
             rn: null,
             con: null,
-            nu: null,
+            nu_str: null,
+            nu: [],
             net: [],
             subOptions: [
                 { text: 'Update of Resource(1)', value: 1 },
@@ -294,6 +297,10 @@ export default {
                 { text: 'Create of Direct Child Resource(3)', value: 3 },
                 { text: 'Delete of Direct Child Resource(4)', value: 4 },
             ],
+
+            new_rn: null,   // create 시 생성된 리소스의 rn
+            // Mock Server에서 확인
+            //new_rn: "ae1_cnt2_sub",
         }
     },
     methods: {
@@ -310,8 +317,10 @@ export default {
                 'get',
                 {}
             );
+            console.log("list:");
             console.log(this.list);
             this.treeList = await this.list_to_tree(this.list)
+            console.log("treeList:");
             console.log(this.treeList);
         },
         async api(url, method, data) {
@@ -449,11 +458,16 @@ export default {
         // Close the contextMenu options
         async close() {
             this.selectedContextMenu = null;
+            this.selectedResource = null;
+            this.disabled = 0;
         },
 
         // Change contextMenu - Create radio button
         async changeCreateRadio() {
             this.rn = null;
+            this.con = null;
+            this.nu_str = null;
+            this.nu = [];
         },
 
         // contextMenu - Click create (ongoing)
@@ -472,12 +486,13 @@ export default {
                 const jsonData = JSON.stringify(data)
                 console.log(jsonData);
 
-                axios.post(url, {jsonData}, { headers : {'Content-Type' : 'application/json; ty=3'} })
-                .then((response) => {
-                    console.log(response);
+                axios.post(url, jsonData, { headers : {'Content-Type' : 'application/json; ty=3'} })
+                .then((response) => {    
+                    console.log("응답 데이터");
+                    console.log(response.data["m2m:cnt"].rn)
+                    this.new_rn = response.data["m2m:cnt"].rn;
+                    console.log(this.new_rn);
                 })
-
-                this.getResource();
             }
             else if(this.selectedResource == 'cin') {
                 console.log('selectedResource: ' + this.selectedResource);
@@ -494,15 +509,23 @@ export default {
 
                 axios.post(url, jsonData, { headers : {'Content-Type' : 'application/json; ty=4'} })
                 .then((response) => {
-                    console.log(response);
+                    console.log("응답 데이터");
+                    console.log(response.data["m2m:cin"].rn)
+                    this.new_rn = response.data["m2m:cin"].rn;
+                    console.log(this.new_rn);
                 })
-
-                this.getResource();
             }
             else if(this.selectedResource == 'sub') {
                 console.log('selectedResource: ' + this.selectedResource);
-                console.log('nu: ' + this.nu);
+                console.log('nu: ' + this.nu_str);
                 console.log('net: ' + this.net);
+
+                console.log(this.nu_str.indexOf(','))
+                if(this.nu_str.indexOf(',') == -1)
+                    this.nu.push(this.nu_str);
+                else
+                    this.nu = this.nu_str.split(',');
+                console.log(this.nu);
 
                 var data = {
                     "m2m:sub" :  {
@@ -516,7 +539,21 @@ export default {
 
                 const jsonData = JSON.stringify(data)
                 console.log(jsonData);
-            } 
+
+                axios.post(url, jsonData, { headers : {'Content-Type' : 'application/json; ty=23'} })
+                .then((response) => {
+                    console.log("응답 데이터");
+                    console.log(response.data["m2m:sub"].rn)
+                    this.new_rn = response.data["m2m:sub"].rn;
+                    console.log(this.new_rn);
+                })
+            }
+            
+            this.getResource();
+
+            this.selectedContextMenu = null;
+            this.selectedResource = null;
+            this.disabled = 0;
         },
 
         // contextMenu - Click delete (ongoing)
@@ -531,7 +568,12 @@ export default {
                 console.log(res.data);
             });
 
+            // 기존 트리 뷰어에서 reload 대신 해당 리소스가 삭제됨
             this.getResource();
+
+            this.selectedContextMenu = null;
+            this.selectedResource = null;
+            this.disabled = 0;
         },
 
     },
@@ -587,6 +629,20 @@ li {
 }
 ul span:hover {
     font-weight: bold;
+}
+
+@keyframes blink-effect {
+    50% {
+        opacity: 0;
+    }
+}
+
+.blink {
+    animation-name: blink-effect;
+    animation-duration: 1s;
+    animation-iteration-count: 10;
+    animation-timing-function: step-end;
+    font-weight: bold;  /* 깜빡이는 동안 글자 크게 */
 }
 
 #info {
