@@ -310,7 +310,7 @@ export default {
             var url2 = this.url2;
             var url = url1 + '/viewer' + url2 + '?la=' + this.latest;
             //Mock Server
-            var url = 'https://4aded162-929f-41b2-904c-fe542272d2d7.mock.pstmn.io/TinyIoT'
+            //var url = 'https://4aded162-929f-41b2-904c-fe542272d2d7.mock.pstmn.io/TinyIoT'
         
             this.list = await this.api(
                 url,
@@ -384,18 +384,7 @@ export default {
             var url = url1 + this.path;
 
             // Mock Server
-            axios.get('https://911d7654-821e-4958-b6f2-6f45f66399e2.mock.pstmn.io/TinyIoT'
-            ).then(response => {
-                console.log(response);
-                this.type = type;
-                this.resourceName = resourceName;
-                this.object = response.data;
-            }).catch((error) => {
-                console.log(error);
-            })
-            
-            // TinyIoT
-            // axios.get(url
+            // axios.get('https://911d7654-821e-4958-b6f2-6f45f66399e2.mock.pstmn.io/TinyIoT'
             // ).then(response => {
             //     console.log(response);
             //     this.type = type;
@@ -404,6 +393,17 @@ export default {
             // }).catch((error) => {
             //     console.log(error);
             // })
+            
+            // TinyIoT
+            axios.get(url
+            ).then(response => {
+                console.log(response);
+                this.type = type;
+                this.resourceName = resourceName;
+                this.object = response.data;
+            }).catch((error) => {
+                console.log(error);
+            })
         },
 
         async findPath(list, resourceName) {
