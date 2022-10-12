@@ -47,30 +47,30 @@
       };
     },
     methods: {
-      showMenu(event, item) {
+      showMenu(event, item) { // 우클릭 시 보이는 contextMenu 처리
         this.item = item;
         
-        if (item.ty === 5) {
+        if (item.ty === 5) {  // CSE - CREATE(X), DELETE(X)
           console.log('CSE');
           this.options[0].disabled = true;
           this.options[2].disabled = true;
         }
-        else if (item.ty === 2) {
+        else if (item.ty === 2) { // AE - CREATE(O), DELETE(X)
           console.log('AE');
           this.options[0].disabled = false;
           this.options[2].disabled = true;
         }
-        else if (item.ty === 3) {
+        else if (item.ty === 3) { // CNT - CREATE(O), DELETE(O)
           console.log('CNT');
           this.options[0].disabled = false;
           this.options[2].disabled = false;
         }
-        else if (item.ty === 4) {
+        else if (item.ty === 4) { // CIN - CREATE(X), DELETE(X)
           console.log('CIN');
           this.options[0].disabled = true;
           this.options[2].disabled = true;
         }
-        else if (item.ty === 23) {
+        else if (item.ty === 23) {  // SUB - CREATE(X), DELETE(O)
           console.log('SUB');
           this.options[0].disabled = true;
           this.options[2].disabled = false;

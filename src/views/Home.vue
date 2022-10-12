@@ -11,7 +11,7 @@
                     </b-col>
                     <b-col id="alignBtn">
                         <b-button class="btn" @click="getResource">Submit</b-button>
-                        <b-button class="btn" @click="allClear">Reset</b-button>
+                        <b-button class="btn" @click="resetAll">Reset</b-button>
                     </b-col>
                 </b-row>
             </b-container>
@@ -53,9 +53,9 @@
                             <b-badge variant="secondary">SUB</b-badge>
                         </span>
                         <span
-                            @contextmenu.prevent.stop="handleClick($event, item)"    
+                            @contextmenu.prevent.stop="handleRightClick($event, item)"  
                         >
-                            {{item.rn}}
+                            {{item.rn}} <!-- 리소스 우클릭 시 CRD contextMenu -->
                         </span>
                     </span>
                     <ul is="childTree" :data="item.children" v-show="item.showChildren" /> <!-- 하위 Tree가 렌더링 될 위치, children 컴포넌트가 된다 -->
@@ -68,17 +68,17 @@
                 <div id="content">
                     <p>1. Select resource type</p>
                         <label>
-                            <input type="radio" value="cnt" v-model="selectedResource" @click="changeCreateRadio">&nbsp;
+                            <input type="radio" value="cnt" v-model="selectedResource" @click="resetProperties">&nbsp;
                             <b-badge variant="danger">CNT</b-badge>
                         </label>
                         &nbsp;&nbsp;
                         <label>
-                            <input type="radio" value="cin" v-model="selectedResource" :disabled="disabled == 1" @click="changeCreateRadio">&nbsp;
+                            <input type="radio" value="cin" v-model="selectedResource" :disabled="disabledRadio == true" @click="resetProperties">&nbsp;
                             <b-badge variant="success">CIN</b-badge>
                         </label>
                         &nbsp;&nbsp;
                         <label>
-                            <input type="radio" value="sub" v-model="selectedResource" :disabled="disabled == 1" @click="changeCreateRadio">&nbsp;
+                            <input type="radio" value="sub" v-model="selectedResource" :disabled="disabledRadio == true" @click="resetProperties">&nbsp;
                             <b-badge variant="secondary">SUB</b-badge>
                         </label>
                     <hr/>
@@ -208,7 +208,7 @@
                         {{resourceName}}  
                     </span>
                 </div>
-                <table v-for="item in object">
+                <table v-for="item in properties">
                     <thead>
                         <tr bgcolor="#E5EEFA" align="center" style="color:blue">
                             <th>Attribute</th>
@@ -231,7 +231,7 @@
             :elementId="'contextMenu'"
             :options="optionsArray"
             :ref="'vueSimpleContextMenu'"
-            @option-clicked="optionClicked"
+            @option-clicked="clickContextMenuOption"
         >
         </vue-simple-context-menu>
     </div>
@@ -252,14 +252,15 @@ export default {
                 { text: '5 Latest', value: '5' },
                 { text: 'ALL (up to 10)', value: '10'}
             ],
-            list: [],       // 서버로부터 받은 데이터 List
-            treeList: [],   // tree 구조 List
-            object: {},
-            type: 0,
-            resourceName: '',
-            path: '',
+            list: [],           // 서버로부터 받은 데이터 List
+            treeList: [],       // tree 구조 List
 
-            optionsArray: [
+            properties: {},     // Properties 
+            type: 0,            // Resource의 ty
+            resourceName: '',   // Resource의 rn
+            path: '',           // 경로
+
+            optionsArray: [     // contextMenu
                 {
                     name: 'Create',
                     disabled: false
@@ -281,14 +282,14 @@ export default {
 
             ],
             
-            selectedContextMenu: null,
+            selectedContextMenu: '',    // 선택한 contextMenu
 
-            selectedResource: null,
-            disabled: 0,
+            selectedResource: null, // Radio Button으로 선택한 Create할 리소스
+            disabledRadio: false,   // Radio Button 변경 시 
             
-            rn: null,
-            con: null,
-            nu_str: null,
+            rn: '',
+            con: '',
+            nu_str: '',
             nu: [],
             net: [],
             subOptions: [
@@ -306,45 +307,32 @@ export default {
     methods: {
         // Click submit button
         async getResource() {
-            var url1 = this.url1;
-            var url2 = this.url2;
-            var url = url1 + '/viewer' + url2 + '?la=' + this.latest;
+            var url = this.url1 + '/viewer' + this.url2; + '?la=' + this.latest;
             //Mock Server
             //var url = 'https://4aded162-929f-41b2-904c-fe542272d2d7.mock.pstmn.io/TinyIoT'
-        
-            this.list = await this.api(
-                url,
-                'get',
-                {}
-            );
-            console.log("list:");
-            console.log(this.list);
-            this.treeList = await this.list_to_tree(this.list)
+            
+            await axios.get(url
+            ).then(response => {
+                this.list = response.data;
+                console.log(this.list);
+            }).catch(error => {
+                console.log(error);
+                if(error.response) {
+                    this.$swal.fire({
+                        title: '대상 서버에 접속할 수 없습니다',
+                        text: 'Unable to access destination server',
+                        icon: 'error'
+                    })
+                }
+            });
+
+            this.treeList = this.list_to_tree(this.list);   // 기존 리스트 -> 트리 구조로 변환
             console.log("treeList:");
             console.log(this.treeList);
         },
-        async api(url, method, data) {
-            return (
-                await axios({
-                    method: method,
-                    url: url,
-                    data: data,
-
-                }).catch((e) => {
-                    console.log(e);
-                    if (e.response) {
-                        this.$swal.fire({
-                            title: '대상 서버에 접속할 수 없습니다',
-                            text: 'Unable to access destination server',
-                            icon: 'error'
-                        })
-                    }
-                })
-            ).data;
-        },
 
         // Convert list to tree structure
-        async list_to_tree(list) {
+        list_to_tree(list) {
             var map = {}, node, roots = [], i;
             
             for (i = 0; i < list.length; i += 1) {
@@ -364,113 +352,62 @@ export default {
             return roots;
         },
 
-
         // Click reset button
-        async allClear() {
+        async resetAll() { // 마지막에 모두 마치고 관련 변수 다 넣어서 초기화 예정
             this.url1 = '';
             this.url2 = '';
             this.latest = '10';
             this.treeList = [];
-            this.object = {};
-            this.selectedContextMenu = null;
-            this.selectedResource = null;
-            this.disabled = 0;
+            this.properties = {};
+            this.selectedContextMenu = '';
+            this.selectedResource = '';
+            this.disabled = false;
         },
 
-        // contextMenu - Click properties
-        async getAttribute (type, resourceName) {
-            var url1 = this.url1;
-            this.path = await this.findPath(this.list, resourceName);
-            var url = url1 + this.path;
-
-            // Mock Server
-            // axios.get('https://911d7654-821e-4958-b6f2-6f45f66399e2.mock.pstmn.io/TinyIoT'
-            // ).then(response => {
-            //     console.log(response);
-            //     this.type = type;
-            //     this.resourceName = resourceName;
-            //     this.object = response.data;
-            // }).catch((error) => {
-            //     console.log(error);
-            // })
-            
-            // TinyIoT
-            axios.get(url
-            ).then(response => {
-                console.log(response);
-                this.type = type;
-                this.resourceName = resourceName;
-                this.object = response.data;
-            }).catch((error) => {
-                console.log(error);
-            })
+        // Handle right-click contextMenu
+        handleRightClick (event, item) {
+            this.$refs.vueSimpleContextMenu.showMenu(event, item);  // showMenu - vue-simple-context-menu.Vue
         },
 
-        async findPath(list, resourceName) {
-            var result = list.find(item => item.rn === resourceName);
-            console.log(result)
-            var pi = result.pi;
-            var path = '/' + result.rn;
-
-            while(pi !== "NULL") {
-                result = list.find(item => item.ri === pi);
-                pi = result.pi;
-                path = '/' + result.rn + path;
-                console.log(path);
-            }
-
-            return path;
-        },
-
-        async handleClick (event, item) {
-            this.$refs.vueSimpleContextMenu.showMenu(event, item);
-        },
-
-        // contextMenu - Handle events based on options
-        async optionClicked (event) {
+        // Handle events based on contextMenu options
+        async clickContextMenuOption (event) {
             // ContentMenu - Create 클릭
             if (event.option.name === 'Create') {
                 this.selectedContextMenu = 'c';
                 this.type = event.item.ty;
-                if (this.type === 2) {
-                    this.disabled = 1;
+                if (this.type === 2) {  // AE에서 Create 시 CNT 외 radio 버튼 비활성화
+                    this.disabledRadio = true;
                 }
                 this.resourceName = event.item.rn;
-                console.log(this.disabled);
-                this.getAttribute(this.type, this.resourceName);
+                // console.log(this.disabledRadio);
+                this.getProperties(this.type, this.resourceName);
             }
             // ContentMenu - Delete 클릭
             else if (event.option.name === 'Delete') {
                 this.selectedContextMenu = 'd';
                 this.type = event.item.ty;
                 this.resourceName = event.item.rn;
-                this.getAttribute(this.type, this.resourceName);
+                this.getProperties(this.type, this.resourceName);
             }
             // ContextMenu - Properties 클릭
             else if(event.option.name === 'Properties') {
                 this.selectedContextMenu = 'p';
                 this.type = event.item.ty;
                 this.resourceName = event.item.rn;
-                this.getAttribute(this.type, this.resourceName);
+                this.getProperties(this.type, this.resourceName);
             }
         },
 
-        // Close the contextMenu options
-        async close() {
-            this.selectedContextMenu = null;
-            this.selectedResource = null;
-            this.disabled = 0;
-        },
-
-        // Change contextMenu - Create radio button
-        async changeCreateRadio() {
-            this.rn = null;
-            this.con = null;
-            this.nu_str = null;
+        // Change radio button on Create
+        resetProperties() {
+            this.rn = '';
+            this.con = '';
+            this.nu_str = '';
             this.nu = [];
+            this.net = [];
         },
 
-        // contextMenu - Click create (ongoing)
+        // Click the Create button
         async createResource() {
             var url = this.url1 + this.path;
             console.log(url);
@@ -486,10 +423,10 @@ export default {
                 const jsonData = JSON.stringify(data)
                 console.log(jsonData);
 
-                axios.post(url, jsonData, { headers : {'Content-Type' : 'application/json; ty=3'} })
+                await axios.post(url, jsonData, { headers : {'Content-Type' : 'application/json; ty=3'} })
                 .then((response) => {    
                     console.log("응답 데이터");
-                    console.log(response.data["m2m:cnt"].rn)
+                    console.log(response.data["m2m:cnt"].rn);
                     this.new_rn = response.data["m2m:cnt"].rn;
                     console.log(this.new_rn);
                 })
@@ -507,10 +444,10 @@ export default {
                 const jsonData = JSON.stringify(data)
                 console.log(jsonData);
 
-                axios.post(url, jsonData, { headers : {'Content-Type' : 'application/json; ty=4'} })
+                await axios.post(url, jsonData, { headers : {'Content-Type' : 'application/json; ty=4'} })
                 .then((response) => {
                     console.log("응답 데이터");
-                    console.log(response.data["m2m:cin"].rn)
+                    console.log(response.data["m2m:cin"].rn);
                     this.new_rn = response.data["m2m:cin"].rn;
                     console.log(this.new_rn);
                 })
@@ -533,14 +470,14 @@ export default {
                         "enc" : {
                             "net": this.net
                         },
-                        "nu" : this.nu // nu -> list 처리 필요!!!
+                        "nu" : this.nu
                     }
                 }
 
                 const jsonData = JSON.stringify(data)
                 console.log(jsonData);
 
-                axios.post(url, jsonData, { headers : {'Content-Type' : 'application/json; ty=23'} })
+                await axios.post(url, jsonData, { headers : {'Content-Type' : 'application/json; ty=23'} })
                 .then((response) => {
                     console.log("응답 데이터");
                     console.log(response.data["m2m:sub"].rn)
@@ -549,35 +486,29 @@ export default {
                 })
             }
             
-            this.getResource();
+            // this.getResource();  // 트리 부분 재조회로 변경
 
-            this.selectedContextMenu = null;
-            this.selectedResource = null;
-            this.disabled = 0;
+            this.close();   // 데이터 초기화
         },
 
-        // contextMenu - Click delete (ongoing)
+        // Click the Delete button
         async deleteResource() {
-            var url1 = this.url1;
-            console.log(this.path);
-            var url = url1 + this.path;
+            var url = this.url1 + this.path;
+            console.log(url);
 
-            axios.delete(url)
+            await axios.delete(url)
             .then(res => {
-                this.$swal.fire({
+                this.$swal.fire({   // Success Alert
                     title: 'Deleted!',
                     text: 'The resource has been deleted.',
                     icon: 'success'
                 })
-                // 트리 뷰 재조회
-                this.getResource();
 
-                this.selectedContextMenu = null;
-                this.selectedResource = null;
-                this.disabled = 0;
+                // this.getResource();  // 트리 부분 재조회로 변경
+                this.close();
             })
             .catch(err => {
-                this.$swal.fire({
+                this.$swal.fire({   // Error Alert
                     title: 'Error!',
                     text: 'The resource  has not deleted.',
                     icon: 'error'
@@ -587,12 +518,63 @@ export default {
 
             // 기존 트리 뷰어에서 reload 대신 해당 리소스가 삭제됨
             // this.getResource();
-
-            // this.selectedContextMenu = null;
-            // this.selectedResource = null;
-            // this.disabled = 0;
         },
 
+        // Click the Properties button
+        async getProperties (type, resourceName) {
+            this.path = this.findPath(this.list, resourceName);
+            var url = this.url1 + this.path;
+
+            // Mock Server
+            // await axios.get('https://911d7654-821e-4958-b6f2-6f45f66399e2.mock.pstmn.io/TinyIoT'
+            // ).then(response => {
+            //     console.log(response);
+            //     this.type = type;
+            //     this.resourceName = resourceName;
+            //     this.properties = response.data;
+            // }).catch(error => {
+            //     console.log(error);
+            // })
+            
+            // TinyIoT
+            await axios.get(url
+            ).then(response => {
+                console.log(response);
+                this.type = type;
+                this.resourceName = resourceName;
+                this.properties = response.data;
+            }).catch(error => {
+                console.log(error);
+            })
+        },
+
+        // Find the path of resourceName
+        findPath(list, resourceName) {
+            var result = list.find(item => item.rn === resourceName);
+            var pi = result.pi;
+            var path = '/' + result.rn;
+
+            while(pi !== "NULL") {
+                result = list.find(item => item.ri === pi);
+                pi = result.pi;
+                path = '/' + result.rn + path;
+                console.log(path);
+            }
+
+            return path;
+        },
+
+        // Close the contextMenu options
+        async close() {
+            this.selectedContextMenu = '';
+            this.selectedResource = '';
+            this.disabledRadio = false;
+            resetProperties();
+            console.log(this.selectedContextMenu);
+            console.log(this.selectedResource);
+            console.log(this.disabledRadio);
+            console.log(this.rn);
+        },
     },
 }
 </script>
